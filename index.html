@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Timetable Tracker (Saving Changes)</title>
+    <title>7-Day Timetable Tracker (Saving Changes)</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -95,155 +95,34 @@
             transform: scale(1.5);
             margin: 5px 0;
             cursor: pointer;
-            accent-color: #007bff; /* Custom color for checkboxes */
+            accent-color: #007bff;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>Timetable Completion Tracker</h1>
+        <h1>7-Day Timetable Completion Tracker</h1>
         <p style="text-align: center; color: #666;">*Status is saved automatically in your browser.*</p>
         <div id="timetable-list">
             </div>
     </div>
 
     <script>
-        // --- Data extracted from your Timetable.xlsx - Sheet1.csv file snippet ---
+        // --- 7 DAYS OF DATA ---
+        // NOTE: The tasks for 2025-10-28 to 2025-10-31 are PLACEHOLDERS.
+        // YOU MUST EDIT THESE TASKS to match your actual timetable data.
         const timetableData = {
+            // Saturday (Data from your snippet)
             "2025-10-25": [
                 "Ray Optics Pg. 221-224",
                 "Amines Pg.259-261",
                 "Differential Equations 9.1",
                 "Bihari Ke Dohe"
             ],
+            // Sunday (Data from your snippet)
             "2025-10-26": [
                 "Ray Optics Pg. 225-228",
                 "Amines Pg.262-265",
                 "Differential Equations 9.2",
                 "Data Communication"
-            ],
-            "2025-10-27": [
-                "Ray Optics Pg. 229-232",
-                "Amines Pg.262-264",
-                "Differential Equations 9.3"
-            ]
-        };
-        const PEOPLE = ['Ayush', 'Kishore'];
-        const STORAGE_KEY_PREFIX = 'timetable_status_';
-        // ----------------------------------------------------------------------
-
-        const timetableList = document.getElementById('timetable-list');
-
-        function formatDate(dateString) {
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const date = new Date(dateString + 'T00:00:00');
-            return date.toLocaleDateString('en-US', options);
-        }
-
-        /**
-         * Checks the status of both checkboxes for a day and updates the day's styling.
-         * @param {string} date - The date string (e.g., '2025-10-25').
-         */
-        function updateDayCompletionStatus(date) {
-            const dayEntry = document.getElementById(`day-entry-${date}`);
-            const ayushCompleted = localStorage.getItem(`${STORAGE_KEY_PREFIX}ayush-${date}`) === 'true';
-            const kishoreCompleted = localStorage.getItem(`${STORAGE_KEY_PREFIX}kishore-${date}`) === 'true';
-            
-            if (ayushCompleted && kishoreCompleted) {
-                dayEntry.classList.add('completed');
-            } else {
-                dayEntry.classList.remove('completed');
-            }
-        }
-
-        /**
-         * Handles saving the checkbox status to Local Storage.
-         * @param {Event} e - The change event from the checkbox.
-         * @param {string} date - The date of the task.
-         * @param {string} personName - The name of the person ('Ayush' or 'Kishore').
-         */
-        function handleCheckboxChange(e, date, personName) {
-            const key = `${STORAGE_KEY_PREFIX}${personName.toLowerCase()}-${date}`;
-            localStorage.setItem(key, e.target.checked);
-            updateDayCompletionStatus(date);
-        }
-
-        function renderTimetable() {
-            for (const [date, tasks] of Object.entries(timetableData)) {
-                // 1. Create the main day entry div
-                const dayEntry = document.createElement('div');
-                dayEntry.className = 'day-entry';
-                dayEntry.id = `day-entry-${date}`; // Add ID for styling updates
-
-                // 2. Add the date heading
-                const dateHeading = document.createElement('h2');
-                dateHeading.textContent = formatDate(date);
-                dayEntry.appendChild(dateHeading);
-
-                // 3. Create the tasks and completion container
-                const tasksCompletionContainer = document.createElement('div');
-                tasksCompletionContainer.className = 'tasks-and-completion';
-
-                // 4. Create the task list
-                const taskList = document.createElement('ul');
-                taskList.className = 'task-list';
-                tasks.forEach(task => {
-                    const taskItem = document.createElement('li');
-                    taskItem.textContent = task;
-                    taskList.appendChild(taskItem);
-                });
-                tasksCompletionContainer.appendChild(taskList);
-
-                // 5. Create the completion checks container
-                const completionChecks = document.createElement('div');
-                completionChecks.className = 'completion-checks';
-
-                // Helper function to create a checkbox section
-                PEOPLE.forEach(personName => {
-                    const personLower = personName.toLowerCase();
-                    const key = `${STORAGE_KEY_PREFIX}${personLower}-${date}`;
-                    
-                    const personCheck = document.createElement('div');
-                    personCheck.className = 'person-check';
-
-                    const label = document.createElement('label');
-                    label.setAttribute('for', `${personLower}-${date}`);
-                    label.textContent = personName;
-                    
-                    const checkbox = document.createElement('input');
-                    checkbox.setAttribute('type', 'checkbox');
-                    checkbox.setAttribute('id', `${personLower}-${date}`);
-
-                    // --- Load saved status from Local Storage ---
-                    const savedStatus = localStorage.getItem(key);
-                    if (savedStatus === 'true') {
-                        checkbox.checked = true;
-                    }
-                    // -------------------------------------------
-
-                    // --- Add change listener to save status ---
-                    checkbox.addEventListener('change', (e) => handleCheckboxChange(e, date, personName));
-                    // ------------------------------------------
-
-                    personCheck.appendChild(label);
-                    personCheck.appendChild(checkbox);
-                    completionChecks.appendChild(personCheck);
-                });
-
-                // 6. Append elements
-                tasksCompletionContainer.appendChild(completionChecks);
-                dayEntry.appendChild(tasksCompletionContainer);
-                timetableList.appendChild(dayEntry);
-                
-                // 7. Check status after creation to set initial day styling
-                updateDayCompletionStatus(date);
-            }
-        }
-
-        // Run the function to build the webpage content
-        renderTimetable();
-    </script>
-
-</body>
-</html>
