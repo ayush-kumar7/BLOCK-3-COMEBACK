@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Timetable Tracker (Saving Changes)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #0056b3;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 10px;
+        }
+
+        .day-entry {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #ffffff;
+            transition: box-shadow 0.3s ease;
+        }
+        
+        /* Highlight completed tasks */
+        .completed {
+            box-shadow: 0 0 10px rgba(0, 128, 0, 0.2);
+            border-color: #a3d9a3;
+        }
+
+        .day-entry h2 {
+            margin-top: 0;
+            color: #333;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .tasks-and-completion {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .task-list {
+            list-style-type: disc;
+            padding-left: 20px;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .task-list li {
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .completion-checks {
+            display: flex;
+            gap: 20px;
+            padding-left: 20px;
+            border-left: 1px solid #eee;
+        }
+
+        .person-check {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            min-width: 60px;
+        }
+
+        .person-check label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        .person-check input[type="checkbox"] {
+            transform: scale(1.5);
+            margin: 5px 0;
+            cursor: pointer;
+            accent-color: #007bff; /* Custom color for checkboxes */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Timetable Completion Tracker</h1>
+        <p style="text-align: center; color: #666;">*Status is saved automatically in your browser.*</p>
+        <div id="timetable-list">
+            </div>
+    </div>
+
+    <script>
+        // --- Data extracted from your Timetable.xlsx - Sheet1.csv file snippet ---
+        const timetableData = {
+            "2025-10-25": [
+                "Ray Optics Pg. 221-224",
+                "Amines Pg.259-261",
+                "Differential Equations 9.1",
+                "Bihari Ke Dohe"
+            ],
+            "2025-10-26": [
+                "Ray Optics Pg. 225-228",
+                "Amines Pg.262-265",
+                "Differential Equations 9.2",
+                "Data Communication"
+            ],
+            "2025-10-27": [
+                "Ray Optics Pg. 229-232",
+                "Amines Pg.262-264",
+                "Differential Equations 9.3"
+            ]
+        };
+        const PEOPLE = ['Ayush', 'Kishore'];
+        const STORAGE_KEY_PREFIX = 'timetable_status_';
+        // ----------------------------------------------------------------------
+
+        const timetableList = document.getElementById('timetable-list');
+
+        function formatDate(dateString) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const date = new Date(dateString + 'T00:00:00');
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        /**
+         * Checks the status of both checkboxes for a day and updates the day's styling.
+         * @param {string} date - The date string (e.g., '2025-10-25').
+         */
+        function updateDayCompletionStatus(date) {
+            const dayEntry = document.getElementById(`day-entry-${date}`);
+            const ayushCompleted = localStorage.getItem(`${STORAGE_KEY_PREFIX}ayush-${date}`) === 'true';
+            const kishoreCompleted = localStorage.getItem(`${STORAGE_KEY_PREFIX}kishore-${date}`) === 'true';
+            
+            if (ayushCompleted && kishoreCompleted) {
+                dayEntry.classList.add('completed');
+            } else {
+                dayEntry.classList.remove('completed');
+            }
+        }
+
+        /**
+         * Handles saving the checkbox status to Local Storage.
+         * @param {Event} e - The change event from the checkbox.
+         * @param {string} date - The date of the task.
+         * @param {string} personName - The name of the person ('Ayush' or 'Kishore').
+         */
+        function handleCheckboxChange(e, date, personName) {
+            const key = `${STORAGE_KEY_PREFIX}${personName.toLowerCase()}-${date}`;
+            localStorage.setItem(key, e.target.checked);
+            updateDayCompletionStatus(date);
+        }
+
+        function renderTimetable() {
+            for (const [date, tasks] of Object.entries(timetableData)) {
+                // 1. Create the main day entry div
+                const dayEntry = document.createElement('div');
+                dayEntry.className = 'day-entry';
+                dayEntry.id = `day-entry-${date}`; // Add ID for styling updates
+
+                // 2. Add the date heading
+                const dateHeading = document.createElement('h2');
+                dateHeading.textContent = formatDate(date);
+                dayEntry.appendChild(dateHeading);
+
+                // 3. Create the tasks and completion container
+                const tasksCompletionContainer = document.createElement('div');
+                tasksCompletionContainer.className = 'tasks-and-completion';
+
+                // 4. Create the task list
+                const taskList = document.createElement('ul');
+                taskList.className = 'task-list';
+                tasks.forEach(task => {
+                    const taskItem = document.createElement('li');
+                    taskItem.textContent = task;
+                    taskList.appendChild(taskItem);
+                });
+                tasksCompletionContainer.appendChild(taskList);
+
+                // 5. Create the completion checks container
+                const completionChecks = document.createElement('div');
+                completionChecks.className = 'completion-checks';
+
+                // Helper function to create a checkbox section
+                PEOPLE.forEach(personName => {
+                    const personLower = personName.toLowerCase();
+                    const key = `${STORAGE_KEY_PREFIX}${personLower}-${date}`;
+                    
+                    const personCheck = document.createElement('div');
+                    personCheck.className = 'person-check';
+
+                    const label = document.createElement('label');
+                    label.setAttribute('for', `${personLower}-${date}`);
+                    label.textContent = personName;
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.setAttribute('type', 'checkbox');
+                    checkbox.setAttribute('id', `${personLower}-${date}`);
+
+                    // --- Load saved status from Local Storage ---
+                    const savedStatus = localStorage.getItem(key);
+                    if (savedStatus === 'true') {
+                        checkbox.checked = true;
+                    }
+                    // -------------------------------------------
+
+                    // --- Add change listener to save status ---
+                    checkbox.addEventListener('change', (e) => handleCheckboxChange(e, date, personName));
+                    // ------------------------------------------
+
+                    personCheck.appendChild(label);
+                    personCheck.appendChild(checkbox);
+                    completionChecks.appendChild(personCheck);
+                });
+
+                // 6. Append elements
+                tasksCompletionContainer.appendChild(completionChecks);
+                dayEntry.appendChild(tasksCompletionContainer);
+                timetableList.appendChild(dayEntry);
+                
+                // 7. Check status after creation to set initial day styling
+                updateDayCompletionStatus(date);
+            }
+        }
+
+        // Run the function to build the webpage content
+        renderTimetable();
+    </script>
+
+</body>
+</html>
