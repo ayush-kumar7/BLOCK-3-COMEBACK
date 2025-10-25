@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7-Day Timetable Tracker (Saving Changes)</title>
+    <title>7-Day Timetable Tracker (Corrected Layout)</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -51,17 +51,24 @@
             margin-bottom: 10px;
         }
 
+        /* ------------------------------------------------------------------ */
+        /* CORRECTED LAYOUT CSS */
+        /* ------------------------------------------------------------------ */
         .tasks-and-completion {
             display: flex;
+            /* Space out the task list and the checkbox area */
             justify-content: space-between;
-            align-items: flex-start;
+            /* Align items to the top of the container */
+            align-items: flex-start; 
         }
 
         .task-list {
             list-style-type: disc;
             padding-left: 20px;
             margin: 0;
-            flex-grow: 1;
+            /* Allow the task list to take up most of the available width */
+            flex-grow: 1; 
+            max-width: 75%; /* Limit width to prevent overflow */
         }
 
         .task-list li {
@@ -71,9 +78,12 @@
 
         .completion-checks {
             display: flex;
-            gap: 20px;
+            /* Keep Ayush and Kishore checkboxes side-by-side */
+            gap: 20px; 
             padding-left: 20px;
             border-left: 1px solid #eee;
+            /* Ensure the checkbox area doesn't take up too much space */
+            flex-shrink: 0; 
         }
 
         .person-check {
@@ -97,6 +107,7 @@
             cursor: pointer;
             accent-color: #007bff;
         }
+        /* ------------------------------------------------------------------ */
     </style>
 </head>
 <body>
@@ -110,19 +121,144 @@
 
     <script>
         // --- 7 DAYS OF DATA ---
-        // NOTE: The tasks for 2025-10-28 to 2025-10-31 are PLACEHOLDERS.
-        // YOU MUST EDIT THESE TASKS to match your actual timetable data.
+        // NOTE: Tasks for 2025-10-28 to 2025-10-31 are PLACEHOLDERS (Edit these!)
         const timetableData = {
-            // Saturday (Data from your snippet)
             "2025-10-25": [
                 "Ray Optics Pg. 221-224",
                 "Amines Pg.259-261",
                 "Differential Equations 9.1",
                 "Bihari Ke Dohe"
             ],
-            // Sunday (Data from your snippet)
             "2025-10-26": [
                 "Ray Optics Pg. 225-228",
                 "Amines Pg.262-265",
                 "Differential Equations 9.2",
                 "Data Communication"
+            ],
+            "2025-10-27": [
+                "Ray Optics Pg. 229-232",
+                "Amines Pg.262-264",
+                "Differential Equations 9.3"
+            ],
+            "2025-10-28": [
+                "PLACEHOLDER: Complete Physics Chapter 10 review",
+                "PLACEHOLDER: Study Organic Chemistry Alcohols",
+                "PLACEHOLDER: Math Ex. 9.4 and 9.5"
+            ],
+            "2025-10-29": [
+                "PLACEHOLDER: Write English Essay draft",
+                "PLACEHOLDER: Computer Science Networking concepts",
+                "PLACEHOLDER: Practice French vocabulary"
+            ],
+            "2025-10-30": [
+                "PLACEHOLDER: Review last week's notes",
+                "PLACEHOLDER: Solve Physics problems (Heat)",
+                "PLACEHOLDER: Read History chapter 5"
+            ],
+            "2025-10-31": [
+                "PLACEHOLDER: Prepare for weekend test",
+                "PLACEHOLDER: Clean and organize study desk",
+                "PLACEHOLDER: Final check of all subjects"
+            ]
+        };
+        const PEOPLE = ['Ayush', 'Kishore'];
+        const STORAGE_KEY_PREFIX = 'timetable_status_';
+        // ----------------------------------------------------------------------
+
+        const timetableList = document.getElementById('timetable-list');
+
+        function formatDate(dateString) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const date = new Date(dateString + 'T00:00:00');
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function updateDayCompletionStatus(date) {
+            const dayEntry = document.getElementById(`day-entry-${date}`);
+            const ayushCompleted = localStorage.getItem(`${STORAGE_KEY_PREFIX}ayush-${date}`) === 'true';
+            const kishoreCompleted = localStorage.getItem(`${STORAGE_KEY_PREFIX}kishore-${date}`) === 'true';
+            
+            if (dayEntry) {
+                if (ayushCompleted && kishoreCompleted) {
+                    dayEntry.classList.add('completed');
+                } else {
+                    dayEntry.classList.remove('completed');
+                }
+            }
+        }
+
+        function handleCheckboxChange(e, date, personName) {
+            const key = `${STORAGE_KEY_PREFIX}${personName.toLowerCase()}-${date}`;
+            localStorage.setItem(key, e.target.checked);
+            updateDayCompletionStatus(date);
+        }
+
+        function renderTimetable() {
+            const sortedDates = Object.keys(timetableData).sort();
+            
+            sortedDates.forEach(date => {
+                const tasks = timetableData[date];
+
+                const dayEntry = document.createElement('div');
+                dayEntry.className = 'day-entry';
+                dayEntry.id = `day-entry-${date}`;
+
+                const dateHeading = document.createElement('h2');
+                dateHeading.textContent = formatDate(date);
+                dayEntry.appendChild(dateHeading);
+
+                const tasksCompletionContainer = document.createElement('div');
+                tasksCompletionContainer.className = 'tasks-and-completion';
+
+                const taskList = document.createElement('ul');
+                taskList.className = 'task-list';
+                tasks.forEach(task => {
+                    const taskItem = document.createElement('li');
+                    taskItem.textContent = task;
+                    taskList.appendChild(taskItem);
+                });
+                tasksCompletionContainer.appendChild(taskList);
+
+                const completionChecks = document.createElement('div');
+                completionChecks.className = 'completion-checks';
+
+                PEOPLE.forEach(personName => {
+                    const personLower = personName.toLowerCase();
+                    const key = `${STORAGE_KEY_PREFIX}${personLower}-${date}`;
+                    
+                    const personCheck = document.createElement('div');
+                    personCheck.className = 'person-check';
+
+                    const label = document.createElement('label');
+                    label.setAttribute('for', `${personLower}-${date}`);
+                    label.textContent = personName;
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.setAttribute('type', 'checkbox');
+                    checkbox.setAttribute('id', `${personLower}-${date}`);
+
+                    const savedStatus = localStorage.getItem(key);
+                    if (savedStatus === 'true') {
+                        checkbox.checked = true;
+                    }
+
+                    checkbox.addEventListener('change', (e) => handleCheckboxChange(e, date, personName));
+
+                    personCheck.appendChild(label);
+                    personCheck.appendChild(checkbox);
+                    completionChecks.appendChild(personCheck);
+                });
+
+                tasksCompletionContainer.appendChild(completionChecks);
+                dayEntry.appendChild(tasksCompletionContainer);
+                timetableList.appendChild(dayEntry);
+                
+                updateDayCompletionStatus(date);
+            });
+        }
+
+        renderTimetable();
+    </script>
+
+</body>
+</html>
